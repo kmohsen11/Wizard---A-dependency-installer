@@ -1,4 +1,6 @@
 import subprocess
+import tkinter as tk
+from tkinter import messagebox
 
 def is_package_installed(package_name):
     """Check if package is installed using brew."""
@@ -9,7 +11,6 @@ def is_package_installed(package_name):
             stderr=subprocess.PIPE,
             text=True
         )
-        
         return result.returncode == 0
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -31,7 +32,6 @@ def check_for_update(package_name):
             stderr=subprocess.PIPE,
             text=True
         )
-        
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip().split()[1:]
         else:
@@ -49,7 +49,6 @@ def update_package(package_name):
             stderr=subprocess.PIPE,
             text=True
         )
-        
         if result.returncode == 0:
             print(f"{package_name} has been updated successfully.")
         else:
@@ -67,7 +66,6 @@ def install_package(package_name):
             stderr=subprocess.PIPE,
             text=True
         )
-        
         if result.returncode == 0:
             print(f"{package_name} has been installed successfully.")
         else:
@@ -85,7 +83,6 @@ def delete_package(package_name):
             stderr=subprocess.PIPE,
             text=True
         )
-        
         if result.returncode == 0:
             print(f"{package_name} has been deleted successfully.")
         else:
@@ -99,36 +96,61 @@ def get_user_input():
     package_name = input("Enter the package name to check: ")
     return package_name
 
-# Example usage
-if __name__ == "__main__":
-    package = get_user_input()
-    version = get_package_version(package)
+# GUI Part
+def check_package():
+    package_name = entry.get()
+    version = get_package_version(package_name)
     
     if version:
-        print(f"{package} is installed with version {version}.")
-        updates = check_for_update(package)
+        result_label.config(text=f"{package_name} is installed with version {version}.")
+        updates = check_for_update(package_name)
         
         if updates:
-            print(f"New versions available: {', '.join(updates)}")
-            user_choice = input("Do you want to update the package? (yes/no): ").strip().lower()
-            
-            if user_choice == "yes":
-                update_package(package)
-            else:
-                print(f"{package} will not be updated.")
+            result_label.config(text=f"New versions available: {', '.join(updates)}")
+            update_button.pack(side=tk.LEFT)
         else:
-            print(f"{package} is up to date.")
+            result_label.config(text=f"{package_name} is up to date.")
         
-        delete_choice = input("Do you want to delete the package? (yes/no): ").strip().lower()
-        if delete_choice == "yes":
-            delete_package(package)
-        else:
-            print(f"{package} will not be deleted.")
+        delete_button.pack(side=tk.LEFT)
     else:
-        print(f"{package} is not installed.")
-        user_choice = input("Do you want to install the package? (yes/no): ").strip().lower()
-        
-        if user_choice == "yes":
-            install_package(package)
-        else:
-            print(f"{package} will not be installed.")
+        result_label.config(text=f"{package_name} is not installed.")
+        install_button.pack(side=tk.LEFT)
+
+def update_package_gui():
+    package_name = entry.get()
+    update_package(package_name)
+    messagebox.showinfo("Info", f"{package_name} has been updated successfully.")
+
+def install_package_gui():
+    package_name = entry.get()
+    install_package(package_name)
+    messagebox.showinfo("Info", f"{package_name} has been installed successfully.")
+
+def delete_package_gui():
+    package_name = entry.get()
+    delete_package(package_name)
+    messagebox.showinfo("Info", f"{package_name} has been deleted successfully.")
+
+root = tk.Tk()
+root.title("Dependency Installer")
+
+frame = tk.Frame(root)
+frame.pack(padx=10, pady=10)
+
+entry_label = tk.Label(frame, text="Enter the package name:")
+entry_label.pack(side=tk.LEFT)
+
+entry = tk.Entry(frame)
+entry.pack(side=tk.LEFT)
+
+check_button = tk.Button(frame, text="Check", command=check_package)
+check_button.pack(side=tk.LEFT)
+
+result_label = tk.Label(root, text="")
+result_label.pack(pady=10)
+
+update_button = tk.Button(root, text="Update", command=update_package_gui)
+install_button = tk.Button(root, text="Install", command=install_package_gui)
+delete_button = tk.Button(root, text="Delete", command=delete_package_gui)
+
+root.mainloop()
